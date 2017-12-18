@@ -2,6 +2,7 @@ var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
+var expressSession = require('express-session');
 
 
 var db = require('./app/config');
@@ -22,9 +23,11 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 
+var middleBoi = (req, res, next) => {
+  res.redirect('/login');
+}
 
-app.get('/', 
-function(req, res) {
+app.get('/', middleBoi, function(req, res) {
   res.render('index');
 });
 
@@ -76,6 +79,21 @@ function(req, res) {
 // Write your authentication routes here
 /************************************************************/
 
+app.get('/login', function(req, res) {
+  res.render('login');
+});
+
+app.post('/login', function(req, res) {
+  console.log(req.body);
+})
+
+app.get('/signup', function(req, res) {
+  res.render('signup');
+})
+
+app.post('/signup', function(req, res) {
+  console.log(req.body);
+})
 
 
 /************************************************************/

@@ -18,6 +18,8 @@ db.knex.schema.hasTable('urls').then(function(exists) {
       link.string('title', 255);
       link.integer('visits');
       link.timestamps();
+      link.integer('user_id').unsigned();
+      link.foreign('user_id').references('Users.id');
     }).then(function (table) {
       console.log('Created Table', table);
     });
@@ -35,6 +37,20 @@ db.knex.schema.hasTable('clicks').then(function(exists) {
     });
   }
 });
+
+db.knex.schema.hasTable('users').then(function(exists) {
+  if (!exists) {
+    db.knex.schema.createTable('users', function(user) {
+      user.increments('id').primary();
+      user.string('username', 255);
+      user.string('password', 255);
+      user.string('salt', 255);
+      user.timestamps();
+    }).then(function(table) {
+      console.log('Created Salty Table', table);
+    })
+  }
+})
 
 /************************************************************/
 // Add additional schema definitions below
