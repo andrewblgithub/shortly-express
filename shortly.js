@@ -34,12 +34,14 @@ app.use(session({
 }))
 
 var middleBoi = (req, res, next) => {
-  req.session.regenerate(function() {
-    if (req.session.authenticated) {
-      res.redirect('/login');
-    }
-    next();
-  })
+  // req.session.regenerate(function() {
+  //   console.log(req.session);
+  //   if (req.session.token) {
+  //     res.redirect('/login');
+  //   }
+  //   next();
+  // })
+  next();
 }
 
 app.get('/', middleBoi, function(req, res) {
@@ -99,19 +101,28 @@ app.get('/login', function(req, res) {
 });
 
 app.post('/login', function(req, res) {
-  if (req.body.username === 'test') {
-    new Link({
-      title: 'Google'
-    }).fetch().then(function(user) {
-      if (!user) {
-        console.log('no user', user)
-      } else {
-        req.session.authenticated = true;
-      }
-    })
-  }
-  console.log(req.body);
-  res.redirect('/');
+  new User({
+    username: req.body.username
+  }).fetch().then(function(user) {
+    if (!user) {
+      console.log('User does not exist!')
+      res.redirect('/login')
+    } else {
+      new User({
+        username: req.body.username,
+        password: req.body.password,
+        salt: user.attributes.salt
+      }).fetch().then(function(user) {
+        if (!user) {
+          console.log('Incorrect password!');
+          res.redirect('/login');
+        } else {
+          console.log('Success!');
+          res.redirect('/login');
+        }
+      })
+    }
+  })
 })
 
 app.get('/signup', function(req, res) {
@@ -119,7 +130,22 @@ app.get('/signup', function(req, res) {
 })
 
 app.post('/signup', function(req, res) {
-  console.log(req.body);
+  new User({
+    username: req.body.username
+  }).fetch().then(function(user) {
+    if (!user) {
+      new User({
+        username: req.body.username,
+        password: req.body.password
+      }).save().then(function(user) {
+        console.log(user);
+      })
+      res.redirect('/');
+    } else {
+      console.log('User already exists!');
+      res.redirect('signup');
+    }
+  })
 })
 
 
