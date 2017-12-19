@@ -2,7 +2,7 @@ var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
-var expressSession = require('express-session');
+var session = require('express-session');
 
 
 var db = require('./app/config');
@@ -23,8 +23,23 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 
+app.use(session({ 
+  secret: 'keyboard cat', 
+  cookie: { 
+    maxAge: 60000, 
+    secure: false
+  },
+  resave: false,
+  saveUninitialized: true
+}))
+
 var middleBoi = (req, res, next) => {
-  res.redirect('/login');
+  req.session.regenerate(function() {
+    if (req.session.authenticated) {
+      res.redirect('/login');
+    }
+    next();
+  })
 }
 
 app.get('/', middleBoi, function(req, res) {
@@ -84,7 +99,19 @@ app.get('/login', function(req, res) {
 });
 
 app.post('/login', function(req, res) {
+  if (req.body.username === 'test') {
+    new Link({
+      title: 'Google'
+    }).fetch().then(function(user) {
+      if (!user) {
+        console.log('no user', user)
+      } else {
+        req.session.authenticated = true;
+      }
+    })
+  }
   console.log(req.body);
+  res.redirect('/');
 })
 
 app.get('/signup', function(req, res) {
