@@ -3,9 +3,9 @@ Shortly.createLinkView = Backbone.View.extend({
 
   template: Templates['create'],
 
-  events: {
-    'submit': 'shortenUrl'
-  },
+  // events: {
+  //   'submit': 'shortenUrl'
+  // },
 
   render: function() {
     this.$el.html( this.template() );

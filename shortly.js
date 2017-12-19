@@ -45,9 +45,24 @@ app.get('/', middleBoi, function(req, res) {
   res.render('index');
 });
 
-app.get('/create', 
-function(req, res) {
-  res.render('index');
+app.get('/create', function(req, res) {
+  var newUrl = util.isValidUrl(req.query.url);
+  if (newUrl) {
+    util.getUrlTitle(req.query.url, function(err, title) {
+      if (err) {
+        throw err;
+      }
+      new Link({
+        url: newUrl[0],
+        title: title,
+        user_id: req.session.user,
+        baseUrl: 'http://localhost:4568'
+      }).save().then(function(link) {
+        console.log(link);
+        res.redirect('/index');
+      })
+    })
+  }
 });
 
 app.get('/links', 
@@ -117,7 +132,7 @@ app.post('/login', function(req, res) {
           }
           if (matches) {
             console.log('IT MATCHES!?!? :o!!!');
-            req.session.user = user.attributes.username;
+            req.session.user = user.attributes.id;
             res.redirect('/')
           } else {
             console.log('Incorrect password!');
