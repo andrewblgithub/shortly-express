@@ -3,7 +3,7 @@ var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
 var session = require('express-session');
-
+var bcrypt = require('bcrypt-nodejs');
 
 var db = require('./app/config');
 var Users = require('./app/collections/users');
@@ -34,14 +34,11 @@ app.use(session({
 }))
 
 var middleBoi = (req, res, next) => {
-  // req.session.regenerate(function() {
-  //   console.log(req.session);
-  //   if (req.session.token) {
-  //     res.redirect('/login');
-  //   }
-  //   next();
-  // })
-  next();
+  if (!req.session.user) {
+    res.redirect('/login');
+  } else {
+    next();
+  }
 }
 
 app.get('/', middleBoi, function(req, res) {
@@ -96,6 +93,11 @@ function(req, res) {
 // Write your authentication routes here
 /************************************************************/
 
+app.get('/logout', function(req, res) {
+  req.session.destroy();
+  res.redirect('/login');
+})
+
 app.get('/login', function(req, res) {
   res.render('login');
 });
@@ -108,19 +110,23 @@ app.post('/login', function(req, res) {
       console.log('User does not exist!')
       res.redirect('/login')
     } else {
-      new User({
-        username: req.body.username,
-        password: req.body.password,
-        salt: user.attributes.salt
-      }).fetch().then(function(user) {
-        if (!user) {
-          console.log('Incorrect password!');
-          res.redirect('/login');
-        } else {
-          console.log('Success!');
-          res.redirect('/login');
-        }
+      return new Promise(function(resolve, reject) {
+        bcrypt.compare(req.body.password, user.attributes.password, function(err, matches) {
+          if (err) {
+            reject (err);
+          }
+          if (matches) {
+            console.log('IT MATCHES!?!? :o!!!');
+            req.session.user = user.attributes.username;
+            res.redirect('/')
+          } else {
+            console.log('Incorrect password!');
+            res.redirect('/login')
+          }
+          resolve(matches);
+        })
       })
+
     }
   })
 })
